@@ -15,6 +15,7 @@ class rancid (
   $packages         = 'USE_DEFAULTS',
   $rancid_config    = 'USE_DEFAULTS',
   $rancid_path_env  = 'USE_DEFAULTS',
+  $rancid_rcs_sys   = 'cvs',
   $homedir          = 'USE_DEFAULTS',
   $logdir           = 'USE_DEFAULTS',
   $user             = 'USE_DEFAULTS',
@@ -218,5 +219,20 @@ class rancid (
     group   => $group_real,
     mode    => '0600',
     content => $cloginrc_content_real,
+  }
+
+  if $rancid::rancid_rcs_sys == 'git' {
+    exec { "setup-git":
+      cwd     => $homedir_real,
+      environment => ["HOME=${homedir_real}"],
+      command => join([
+        "git config --global user.email \"rancid@${::fqdn}\"",
+        "git config --global user.name rancid"
+      ], ';'),
+      user    => $rancid::user_real,
+      before  => Rancid::Router_db[$groups],
+      require => Package[$packages],
+      unless  => "grep email ${rancid::homedir_real}/.gitconfig"
+    }
   }
 }
