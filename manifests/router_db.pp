@@ -5,8 +5,8 @@ define rancid::router_db (
   $rancid_cvs_path = '/bin:/usr/bin',
   $router_db_mode  = '0640',
 ) {
-
   exec { "rancid-cvs-${name}":
+    environment => ["HOME=${rancid::homedir_real}"],
     command => "rancid-cvs ${name}",
     path    => $rancid_cvs_path,
     user    => $rancid::user_real,
