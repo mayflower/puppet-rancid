@@ -3,26 +3,27 @@
 # Manage RANCID - http://www.shrubbery.net/rancid/
 #
 class rancid (
-  $filterpwds       = 'ALL', # yes, no, all
-  $nocommstr        = 'YES', # yes or no
-  $maxrounds        = '4',
-  $oldtime          = '4',
-  $locktime         = '4',
-  $parcount         = '5',
-  $maildomain       = undef,
-  $groups           = [ 'routers', 'switches', 'firewalls' ],
-  $devices          = undef,
-  $packages         = 'USE_DEFAULTS',
-  $rancid_config    = 'USE_DEFAULTS',
-  $rancid_path_env  = 'USE_DEFAULTS',
-  $rancid_rcs_sys   = 'cvs',
-  $homedir          = 'USE_DEFAULTS',
-  $logdir           = 'USE_DEFAULTS',
-  $user             = 'USE_DEFAULTS',
-  $group            = 'USE_DEFAULTS',
-  $shell            = 'USE_DEFAULTS',
-  $cron_d_file      = '/etc/cron.d/rancid',
-  $cloginrc_content = 'USE_DEFAULTS',
+  $filterpwds        = 'ALL', # yes, no, all
+  $nocommstr         = 'YES', # yes or no
+  $maxrounds         = '4',
+  $oldtime           = '4',
+  $locktime          = '4',
+  $parcount          = '5',
+  $maildomain        = undef,
+  $groups            = [ 'routers', 'switches', 'firewalls' ],
+  $devices           = undef,
+  $packages          = 'USE_DEFAULTS',
+  $rancid_config     = 'USE_DEFAULTS',
+  $rancid_path_env   = 'USE_DEFAULTS',
+  $rancid_rcs_sys    = 'cvs',
+  $rancid_git_remote = undef,
+  $homedir           = 'USE_DEFAULTS',
+  $logdir            = 'USE_DEFAULTS',
+  $user              = 'USE_DEFAULTS',
+  $group             = 'USE_DEFAULTS',
+  $shell             = 'USE_DEFAULTS',
+  $cron_d_file       = '/etc/cron.d/rancid',
+  $cloginrc_content  = 'USE_DEFAULTS',
 ) {
 
   # set default parameters
@@ -124,6 +125,13 @@ class rancid (
   validate_re($oldtime, '^(\d)+$', "rancid::oldtime is ${oldtime} and must match the regex of a number.")
   validate_re($locktime, '^(\d)+$', "rancid::locktime is ${locktime} and must match the regex of a number.")
   validate_re($parcount, '^(\d)+$', "rancid::parcount is ${parcount} and must match the regex of a number.")
+  validate_re($rancid_rcs_sys, '^(git|git-remote|cvs|svn)$',
+    "rancid::rancid_rcs_sys ${rancid_rcs_sys} is not supported (cvs, svn, git, git-remote)")
+
+  if $rancid_rcs_sys == 'git-remote' {
+    validate_string($rancid_git_remote, "git-remote in use, but rancid::rancid_git_remote not set")
+  }
+
   if ($maildomain != undef ) {
     validate_re($maildomain,'^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6}$',"rancid::maildomain is ${maildomain} and must be a valid domain name")
   }
@@ -221,18 +229,7 @@ class rancid (
     content => $cloginrc_content_real,
   }
 
-  if $rancid::rancid_rcs_sys == 'git' {
-    exec { "setup-git":
-      cwd     => $homedir_real,
-      environment => ["HOME=${homedir_real}"],
-      command => join([
-        "git config --global user.email \"rancid@${::fqdn}\"",
-        "git config --global user.name rancid"
-      ], ';'),
-      user    => $rancid::user_real,
-      before  => Rancid::Router_db[$groups],
-      require => Package[$packages],
-      unless  => "grep email ${rancid::homedir_real}/.gitconfig"
-    }
+  if $rancid::rancid_rcs_sys =~ /^git/ {
+    class { 'rancid::git': }
   }
 }
