@@ -56,9 +56,6 @@ class rancid (
           $default_logdir          = '/var/log/rancid'
           $default_rancid_path_env = '/usr/libexec/rancid:/bin:/usr/bin:/usr/local/bin'
         }
-        default: {
-          fail("Rancid supports osfamily RedHat release 6. Detected operatingsystemmajrelease is <${::operatingsystemmajrelease}>.")
-        }
       }
     }
   }
