@@ -18,6 +18,10 @@ class rancid::git ($remote=undef) {
       environment => ["HOME=${rancid::homedir_real}"],
       command     => "git remote add origin ${rancid::rancid_git_remote}",
       user        => $rancid::user_real,
+      require     => [
+        Package[$rancid::packages],
+        Rancid::Router_db[$rancid::groups]
+      ],
       unless      => "grep \"remote \\\"origin\\\"\" ${rancid::homedir_real}/.git/config"
     }
   }
