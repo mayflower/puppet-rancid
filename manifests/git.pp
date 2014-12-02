@@ -18,11 +18,20 @@ class rancid::git ($remote=undef) {
       environment => ["HOME=${rancid::homedir_real}"],
       command     => "git remote add origin ${rancid::rancid_git_remote}",
       user        => $rancid::user_real,
+      unless      => "grep \"remote \\\"origin\\\"\" ${rancid::homedir_real}/.git/config",
+      notify      => Exec['rancid-update-git-remote'],
       require     => [
         Package[$rancid::packages],
         Rancid::Router_db[$rancid::groups]
-      ],
-      unless      => "grep \"remote \\\"origin\\\"\" ${rancid::homedir_real}/.git/config"
+      ]
+    }
+
+    exec { 'rancid-update-git-remote':
+      cwd         => $rancid::homedir_real,
+      environment => ["HOME=${rancid::homedir_real}"],
+      command     => "git push -u origin master",
+      user        => $rancid::user_real,
+      refreshonly => true
     }
   }
 }
